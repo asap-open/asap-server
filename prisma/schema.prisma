@@ -1,0 +1,194 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Enums
+enum UnitPreference {
+  kg
+  lbs
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum SessionLabel {
+  Chest
+  Back
+  Shoulders
+  Arms
+  Core
+  Legs
+  Glutes
+  FullBody
+  Cardio
+  Mobility
+  Stretching
+}
+
+// 1. User & Profile Management
+model User {
+  id            String   @id @default(uuid())
+  username      String   @unique
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  profile       UserProfile?
+  routines      Routine[]
+  workoutSessions WorkoutSession[]
+  weightLogs    WeightLog[]
+  customExercises GlobalExercise[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id              Int             @id @default(autoincrement())
+  userId          String          @unique @map("user_id")
+  fullName        String?         @map("full_name")
+  heightCm        Float?          @map("height_cm")
+  targetWeightKg  Float?          @map("target_weight_kg")
+  latestWeightKg  Float?          @map("latest_weight_kg")
+  unitPref        UnitPreference  @default(kg) @map("unit_pref")
+  dateOfBirth     DateTime?       @map("date_of_birth")
+  gender          Gender?
+
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// 2. Exercise Library (Global & Custom)
+model GlobalExercise {
+  id               String  @id // Slug like 'barbell-bench-press'
+  name             String
+  category         String
+  equipment        String
+  primaryMuscles   Json    @map("primary_muscles") // Stored as JSON array
+  secondaryMuscles Json?   @map("secondary_muscles")
+  instructions     String? @db.Text
+  isCustom         Boolean @default(false) @map("is_custom")
+  createdBy        String? @map("created_by") // Null for global, userId for custom
+
+  // Relations
+  creator          User?   @relation(fields: [createdBy], references: [id])
+  routineExercises RoutineExercise[]
+  exerciseEntries  ExerciseEntry[]
+
+  @@map("global_exercises")
+}
+
+// 3. Routines (Templates)
+model Routine {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  name        String
+  description String?  @db.Text
+  labels      SessionLabel[]
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises   RoutineExercise[]
+
+  @@map("routines")
+}
+
+model RoutineExercise {
+  id          Int      @id @default(autoincrement())
+  routineId   Int      @map("routine_id")
+  exerciseId  String   @map("exercise_id")
+  order       Int
+
+  routine     Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exercise    GlobalExercise @relation(fields: [exerciseId], references: [id])
+  sets        RoutineSet[]
+  @@map("routine_exercises")
+
+}
+
+model RoutineSet {
+  id                Int     @id @default(autoincrement())
+  routineExerciseId Int     @map("routine_exercise_id")
+  setIndex          Int     @map("set_index")
+  
+  // Targets (Optional because it's a template)
+  weight            Float?  
+  reps              Int?    
+  distance          Float?  
+  durationSec       Int?    @map("duration_sec")
+  isHardSet         Boolean @default(true) @map("is_hard_set")
+
+  routineExercise   RoutineExercise @relation(fields: [routineExerciseId], references: [id], onDelete: Cascade)
+
+  @@map("routine_sets")
+}
+
+// 4. Workout Sessions (Active Logs)
+model WorkoutSession {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  routineId   Int?     @map("routine_id") // Optional link to the template used
+  sessionName String   @map("session_name")
+  labels      SessionLabel[]
+  startTime   DateTime @default(now()) @map("start_time")
+  endTime     DateTime? @map("end_time")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises   ExerciseEntry[]
+
+  @@map("workout_sessions")
+}
+
+model ExerciseEntry {
+  id          Int      @id @default(autoincrement())
+  sessionId   Int      @map("session_id")
+  exerciseId  String   @map("exercise_id")
+  order       Int
+
+  session     WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise    GlobalExercise @relation(fields: [exerciseId], references: [id])
+  sets        Set[]
+
+  @@map("exercise_entries")
+}
+
+model Set {
+  id              Int     @id @default(autoincrement())
+  exerciseEntryId Int     @map("exercise_entry_id")
+  setIndex        Int     @map("set_index")
+  weight          Float   @default(0) // Input value
+  reps            Int     @default(0)
+  isHardSet       Boolean @default(true) @map("is_hard_set")
+  distance        Float?  // For cardio
+  durationSec     Int?    @map("duration_sec") // For cardio
+
+  exerciseEntry   ExerciseEntry @relation(fields: [exerciseEntryId], references: [id], onDelete: Cascade)
+
+  @@map("sets")
+}
+
+// 5. Body Analytics
+model WeightLog {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  weightKg    Float    @map("weight_kg")
+  recordedAt  DateTime @default(now()) @map("recorded_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("weight_logs")
+}

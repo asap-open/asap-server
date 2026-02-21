@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    // "rootDir": "./",
+    "outDir": "./dist",
+    "module": "nodenext",
+    "target": "ES2023",
+    "moduleResolution": "nodenext",
+    "baseUrl": ".",
+    "paths": {
+      "@prisma/client": ["./prisma/generated/client.js"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["src", "prisma/generated"],
+  "exclude": ["node_modules", "dist", "prisma/migrations"] // Exclude migrations
+}
