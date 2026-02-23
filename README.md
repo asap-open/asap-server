@@ -1,6 +1,18 @@
-# ASAP Server
+<p align="center">
+  <img src="public/logo-2.webp" alt="ASAP" width="96" />
+</p>
 
-Backend API for the ASAP (Applied Strength & Advancement Platform) workout tracking system.
+<h1 align="center">ASAP — Server</h1>
+
+<p align="center">
+  Node.js + Express + TypeScript API for the <strong>Applied Strength & Advancement Platform</strong>.
+  A self-hosted, data-driven workout tracker built for serious lifters.
+</p>
+
+<p align="center">
+  <a href="https://asap-open.github.io/asap-docs/api/authentication">API Reference</a> ·
+  <a href="https://asap-open.github.io/asap-docs/installation">Deployment</a>
+</p>
 
 ## Tech Stack
 
@@ -47,14 +59,14 @@ data/
 
 - Node.js 18+
 - PostgreSQL 14+
-- npm or yarn
+- Yarn
 
 ### Setup
 
 1. **Install dependencies**
 
 ```bash
-npm install
+yarn install
 ```
 
 2. **Set up environment variables**
@@ -85,23 +97,23 @@ npx prisma generate
 4. **Seed the database** (optional)
 
 ```bash
-npm run seed
+npx prisma db seed
 ```
 
 5. **Start development server**
 
 ```bash
-npm run dev
+yarn dev
 ```
 
 The API will be available at http://localhost:3000
 
 ### Available Scripts
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run seed` - Seed database with exercise data
+- `yarn dev` - Start development server with hot reload
+- `yarn build` - Build for production
+- `yarn start` - Start production server
+- `npx prisma db seed` - Seed database with exercise data
 - `npx prisma studio` - Open Prisma Studio (database GUI)
 - `npx prisma migrate dev` - Create and apply migrations
 
@@ -276,7 +288,7 @@ The seed script (`src/utils/seed.ts`) populates the database with:
 Run seeding:
 
 ```bash
-npm run seed
+yarn seed
 ```
 
 ### Custom Seeding
@@ -292,7 +304,7 @@ Edit `src/utils/seed.ts` to add:
 Visual database browser for development:
 
 ```bash
-npx prisma studio
+yarn prisma studio
 ```
 
 Opens at http://localhost:5555
@@ -309,8 +321,8 @@ docker run -p 3000:3000 asap-server
 ### Manual Build
 
 ```bash
-npm run build
-npm start
+yarn build
+yarn start
 ```
 
 The built files will be in the `dist/` directory.
@@ -433,9 +445,9 @@ docker-compose up -d
 ### Standalone Deployment
 
 1. Set environment variables
-2. Run migrations: `npx prisma migrate deploy`
-3. Build: `npm run build`
-4. Start: `npm start`
+2. Run migrations: `yarn prisma migrate deploy`
+3. Build: `yarn build`
+4. Start: `yarn start`
 
 ### Database Backup
 
@@ -452,13 +464,14 @@ pg_dump -U postgres workout_db > backup.sql
 - ✅ Environment variables for secrets
 - ✅ Input validation on all endpoints
 - ✅ CORS configured for frontend origin
-- ⚠️ Use HTTPS in production
-- ⚠️ Set strong JWT_SECRET
-- ⚠️ Rate limiting (consider adding)
+
+## License
+
+This project is licensed under the **GPLv3 License** — see [LICENSE](LICENSE) for details.
 
 ## Contributing
 
-See the main [repository README](../README.md) for contribution guidelines.
+See the [CONTRIBUTING](CONTRIBUTING) for contribution guidelines.
 
 ## License
 
