@@ -39,6 +39,15 @@ enum SessionLabel {
   Stretching
 }
 
+enum PBMetric {
+  MaxWeight     // Heaviest single weight lifted
+  MaxReps       // Most reps in a single set
+  MaxVolume     // Highest weight × reps in a single set
+  Max1RM        // Highest estimated 1-rep max (Epley: weight × (1 + reps/30))
+  MaxDuration   // Longest duration (cardio/holds)
+  MaxDistance   // Longest distance (cardio)
+}
+
 // 1. User & Profile Management
 model User {
   id            String   @id @default(uuid())
@@ -53,6 +62,7 @@ model User {
   workoutSessions WorkoutSession[]
   weightLogs    WeightLog[]
   customExercises GlobalExercise[]
+  personalBests PersonalBest[]
 
   @@map("users")
 }
@@ -89,6 +99,7 @@ model GlobalExercise {
   creator          User?   @relation(fields: [createdBy], references: [id])
   routineExercises RoutineExercise[]
   exerciseEntries  ExerciseEntry[]
+  personalBests    PersonalBest[]
 
   @@map("global_exercises")
 }
@@ -149,6 +160,7 @@ model WorkoutSession {
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   exercises   ExerciseEntry[]
+  personalBests PersonalBest[]
 
   @@map("workout_sessions")
 }
@@ -177,6 +189,7 @@ model Set {
   durationSec     Int?    @map("duration_sec") // For cardio
 
   exerciseEntry   ExerciseEntry @relation(fields: [exerciseEntryId], references: [id], onDelete: Cascade)
+  personalBests   PersonalBest[]
 
   @@map("sets")
 }
@@ -191,4 +204,27 @@ model WeightLog {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("weight_logs")
+}
+
+// 6. Personal Bests
+model PersonalBest {
+  id          Int        @id @default(autoincrement())
+  userId      String     @map("user_id")
+  exerciseId  String     @map("exercise_id")
+  metric      PBMetric
+  value       Float      // Unit depends on metric: kg, reps, kg·reps, kg (1RM), sec, km
+  achievedAt  DateTime   @map("achieved_at")
+
+  // Optional back-references so we can link to the exact set/session
+  sessionId   Int?       @map("session_id")
+  setId       Int?       @map("set_id")
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise    GlobalExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  session     WorkoutSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  set         Set?            @relation(fields: [setId], references: [id], onDelete: SetNull)
+
+  // One record per user + exercise + metric — updated in place when beaten
+  @@unique([userId, exerciseId, metric])
+  @@map("personal_bests")
 }

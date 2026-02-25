@@ -6,6 +6,7 @@ import weightRoutes from "./routes/weight.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import progressRoutes from "./routes/progress.route.js";
 import routineRoutes from "./routes/routine.route.js";
+import pbRoutes from "./routes/pb.route.js";
 import { prisma } from "./utils/prisma.js";
 
 const app = express();
@@ -54,6 +55,7 @@ app.use("/api/weights", weightRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/routines", routineRoutes);
+app.use("/api/pbs", pbRoutes);
 
 app.get("/", (req, res) => {
   res.send("ASAP API Server Running");
