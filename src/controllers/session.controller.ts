@@ -47,6 +47,7 @@ export const createSession = async (
       if (exercises && Array.isArray(exercises)) {
         for (let i = 0; i < exercises.length; i++) {
           const ex = exercises[i];
+          const isTimeBased = ex.isTimeBased === true;
 
           // Create Exercise Entry
           const entry = await tx.exerciseEntry.create({
@@ -54,6 +55,7 @@ export const createSession = async (
               sessionId: session.id,
               exerciseId: ex.exerciseId,
               order: i,
+              isTimeBased,
             },
           });
 
@@ -64,7 +66,8 @@ export const createSession = async (
               exerciseEntryId: entry.id,
               setIndex: index,
               weight: s.weight || 0,
-              reps: s.reps || 0,
+              reps: isTimeBased ? 0 : s.reps || 0,
+              durationSec: isTimeBased ? s.durationSec || 0 : null,
               isHardSet: s.isHardSet !== undefined ? s.isHardSet : true,
             }));
 
@@ -349,6 +352,7 @@ export const updateSession = async (
         // B. Re-create everything from current state
         for (let i = 0; i < exercises.length; i++) {
           const ex = exercises[i];
+          const isTimeBased = ex.isTimeBased === true;
 
           // Create Exercise Entry
           const entry = await tx.exerciseEntry.create({
@@ -356,6 +360,7 @@ export const updateSession = async (
               sessionId,
               exerciseId: ex.exerciseId,
               order: i,
+              isTimeBased,
             },
           });
 
@@ -366,7 +371,8 @@ export const updateSession = async (
               exerciseEntryId: entry.id,
               setIndex: index,
               weight: s.weight || 0,
-              reps: s.reps || 0,
+              reps: isTimeBased ? 0 : s.reps || 0,
+              durationSec: isTimeBased ? s.durationSec || 0 : null,
               isHardSet: s.isHardSet !== undefined ? s.isHardSet : true,
             }));
 

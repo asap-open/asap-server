@@ -170,6 +170,7 @@ model ExerciseEntry {
   sessionId   Int      @map("session_id")
   exerciseId  String   @map("exercise_id")
   order       Int
+  isTimeBased Boolean  @default(false) @map("is_time_based")
 
   session     WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   exercise    GlobalExercise @relation(fields: [exerciseId], references: [id])
