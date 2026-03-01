@@ -11,13 +11,25 @@ import { prisma } from "./utils/prisma.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
-const frontendDomain = process.env.FRONTEND_DOMAIN;
+
+// Support comma-separated FRONTEND_DOMAIN values and always allow Capacitor origins
+const configuredOrigins = (process.env.FRONTEND_DOMAIN || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const ALLOWED_ORIGINS = new Set([
+  ...configuredOrigins,
+  "capacitor://localhost", // Android (Capacitor, legacy)
+  "http://localhost", // Android WebView (androidScheme: http)
+  "https://localhost", // Android WebView (androidScheme: https)
+]);
 
 // Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   console.log(
-    `[${new Date().toISOString()}] Incoming: ${req.method} ${req.originalUrl}`,
+    `[${new Date().toISOString()}] Incoming: ${req.method} ${req.originalUrl} | Origin: "${req.headers.origin ?? "none"}"`,
   );
 
   res.on("finish", () => {
@@ -32,7 +44,13 @@ app.use((req, res, next) => {
 
 // CORS middleware
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", frontendDomain);
+  const origin = req.headers.origin;
+  console.log(
+    `[CORS] Origin: "${origin ?? "none"}" | Allowed: ${origin ? ALLOWED_ORIGINS.has(origin) : false}`,
+  );
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header(
     "Access-Control-Allow-Headers",
