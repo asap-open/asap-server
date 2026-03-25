@@ -2,6 +2,39 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware.js";
 import { exerciseService } from "../services/exercise.services.js";
 
+export const getExercisesLastUpdated = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const lastUpdated = await exerciseService.getLastUpdated(userId);
+    res.status(200).json({ data: { lastUpdated } });
+  } catch (error) {
+    console.error("Get Exercises Last Updated Error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getAllExercises = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const data = await exerciseService.getAllExercises(userId);
+    res.status(200).json({
+      data,
+      meta: {
+        total: data.length,
+      },
+    });
+  } catch (error) {
+    console.error("Get All Exercises Error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 // 1. Search Exercises (NEW - Main search endpoint)
 export const searchExercises = async (
   req: AuthRequest,

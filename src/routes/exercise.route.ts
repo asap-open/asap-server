@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 import {
+  getExercisesLastUpdated,
+  getAllExercises,
   searchExercises,
   getExercises,
   getExercisesByMuscle,
@@ -15,6 +17,10 @@ import {
 
 const router = Router();
 router.use(authenticateToken);
+
+// Cache endpoints
+router.get("/last-updated", getExercisesLastUpdated);
+router.get("/all", getAllExercises);
 
 // Search endpoint - main endpoint for filtering and searching
 router.get("/search", searchExercises);

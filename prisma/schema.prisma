@@ -95,6 +95,7 @@ model GlobalExercise {
   instructions     String? @db.Text
   isCustom         Boolean @default(false) @map("is_custom")
   createdBy        String? @map("created_by") // Null for global, userId for custom
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
 
   // Relations
   creator          User?   @relation(fields: [createdBy], references: [id])

@@ -36,7 +36,57 @@ export interface SearchResult {
   };
 }
 
+export interface ExerciseCacheItem {
+  id: string;
+  name: string;
+  category: string;
+  equipment: string;
+  isBodyweightExercise: boolean;
+  primaryMuscles: JsonValue;
+  secondaryMuscles: JsonValue | null;
+  instructions: string | null;
+  isCustom: boolean;
+  createdBy: string | null;
+}
+
 export class ExerciseService {
+  async getLastUpdated(userId?: string): Promise<string | null> {
+    const latest = await prisma.globalExercise.findFirst({
+      where: {
+        OR: [{ isCustom: false }, { createdBy: userId }],
+      },
+      select: {
+        updatedAt: true,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    return latest?.updatedAt.toISOString() ?? null;
+  }
+
+  async getAllExercises(userId?: string): Promise<ExerciseCacheItem[]> {
+    return prisma.globalExercise.findMany({
+      where: {
+        OR: [{ isCustom: false }, { createdBy: userId }],
+      },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        equipment: true,
+        isBodyweightExercise: true,
+        primaryMuscles: true,
+        secondaryMuscles: true,
+        instructions: true,
+        isCustom: true,
+        createdBy: true,
+      },
+      orderBy: [{ isCustom: "asc" }, { name: "asc" }],
+    });
+  }
+
   /**
    * Main search function with relevance scoring
    */
