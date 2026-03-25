@@ -42,13 +42,12 @@ export const searchExercises = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const { q, muscle, category, equipment, limit, offset } = req.query;
+    const { muscle, category, equipment, limit, offset } = req.query;
 
     const limitStr = Array.isArray(limit) ? limit[0] : limit;
     const offsetStr = Array.isArray(offset) ? offset[0] : offset;
 
     const result = await exerciseService.searchExercises({
-      q: q as string,
       muscle: muscle as string | string[],
       category: category as string,
       equipment: equipment as string,
@@ -72,7 +71,6 @@ export const getExercises = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const search = req.query.search as string;
     const muscle = req.query.muscle;
     const pageRaw = req.query.page;
     const limitRaw = req.query.limit;
@@ -83,7 +81,6 @@ export const getExercises = async (
     const offset = (page - 1) * limit;
 
     const result = await exerciseService.searchExercises({
-      q: search,
       muscle: muscle as string | string[],
       userId,
       limit,

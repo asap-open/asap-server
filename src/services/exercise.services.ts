@@ -1,7 +1,6 @@
 import { prisma } from "../utils/prisma.js";
 type JsonValue = any;
 export interface SearchParams {
-  q?: string;
   muscle?: string | string[];
   category?: string;
   equipment?: string;
@@ -88,11 +87,10 @@ export class ExerciseService {
   }
 
   /**
-   * Main search function with relevance scoring
+   * Main search function with database filtering and pagination
    */
   async searchExercises(params: SearchParams): Promise<SearchResult> {
     const {
-      q,
       muscle,
       category,
       equipment,
@@ -132,38 +130,31 @@ export class ExerciseService {
       where.AND = filters;
     }
 
-    // Fetch exercises
-    const exercises = await prisma.globalExercise.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        category: true,
-        equipment: true,
-        isBodyweightExercise: true,
-        primaryMuscles: true,
-        secondaryMuscles: true,
+    const [total, data] = await Promise.all([
+      prisma.globalExercise.count({ where }),
+      prisma.globalExercise.findMany({
+        where,
+        skip: offset,
+        take: limit,
+        orderBy: [{ isCustom: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          equipment: true,
+          isBodyweightExercise: true,
+          primaryMuscles: true,
+          secondaryMuscles: true,
 
-        instructions: true,
-        isCustom: true,
-        createdBy: true,
-      },
-    });
-
-    // Apply search query with relevance scoring if provided
-    let results = exercises;
-    if (q) {
-      results = this.searchWithRelevance(exercises, q);
-    }
-
-    // Get total before pagination
-    const total = results.length;
-
-    // Paginate
-    const paginatedResults = results.slice(offset, offset + limit);
+          instructions: true,
+          isCustom: true,
+          createdBy: true,
+        },
+      }),
+    ]);
 
     return {
-      data: paginatedResults,
+      data,
       meta: {
         total,
         limit,
@@ -171,87 +162,6 @@ export class ExerciseService {
         hasMore: offset + limit < total,
       },
     };
-  }
-
-  /**
-   * Search with relevance scoring
-   */
-  private searchWithRelevance(
-    exercises: Exercise[],
-    query: string,
-  ): Exercise[] {
-    const q = query.toLowerCase().trim();
-
-    // Score each exercise
-    const scored = exercises.map((exercise) => ({
-      exercise,
-      score: this.calculateRelevanceScore(exercise, q),
-    }));
-
-    // Filter out non-matches (score = 0) and sort by score
-    return scored
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map((item) => item.exercise);
-  }
-
-  /**
-   * Calculate relevance score for an exercise
-   */
-  private calculateRelevanceScore(exercise: Exercise, query: string): number {
-    let score = 0;
-    const name = exercise.name.toLowerCase();
-    const category = exercise.category.toLowerCase();
-    const equipment = exercise.equipment.toLowerCase();
-    const primaryMuscles = Array.isArray(exercise.primaryMuscles)
-      ? exercise.primaryMuscles.map((m) => (m as string).toLowerCase())
-      : [];
-    const secondaryMuscles = Array.isArray(exercise.secondaryMuscles)
-      ? exercise.secondaryMuscles.map((m) => (m as string).toLowerCase())
-      : [];
-
-    // Exact name match - highest priority
-    if (name === query) {
-      score += 100;
-    }
-    // Name starts with query - high priority
-    else if (name.startsWith(query)) {
-      score += 80;
-    }
-    // Name contains query - medium priority
-    else if (name.includes(query)) {
-      score += 60;
-    }
-
-    // Check if query matches words in name (word boundary)
-    const nameWords = name.split(/[\s-]+/);
-    if (nameWords.some((word) => word === query)) {
-      score += 70;
-    } else if (nameWords.some((word) => word.startsWith(query))) {
-      score += 50;
-    }
-
-    // Primary muscle match - medium priority
-    if (primaryMuscles.some((m) => m.includes(query))) {
-      score += 50;
-    }
-
-    // Secondary muscle match - lower priority
-    if (secondaryMuscles.some((m) => m.includes(query))) {
-      score += 30;
-    }
-
-    // Equipment match - lower priority
-    if (equipment.includes(query)) {
-      score += 20;
-    }
-
-    // Category match - lowest priority
-    if (category.includes(query)) {
-      score += 10;
-    }
-
-    return score;
   }
 
   /**
