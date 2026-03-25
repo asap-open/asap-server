@@ -28,6 +28,10 @@ async function main() {
     name: ex.name,
     category: ex.category || "strength",
     equipment: ex.equipment || "body only",
+    isBodyweightExercise: (ex.equipment || "body only")
+      .toString()
+      .toLowerCase()
+      .includes("body"),
     primaryMuscles: ex.primaryMuscles || [],
     secondaryMuscles: ex.secondaryMuscles || [],
     instructions: Array.isArray(ex.instructions)

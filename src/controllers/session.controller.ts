@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { prisma } from "../utils/prisma.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
+import { computeWorkoutMetrics } from "../utils/workoutMetrics.js";
 
 // 1. Create/Log a Workout Session
 export const createSession = async (
@@ -149,7 +150,14 @@ export const getSessions = async (
         exercises: {
           include: {
             sets: true,
-            exercise: { select: { name: true, category: true } },
+            exercise: {
+              select: {
+                name: true,
+                category: true,
+                isBodyweightExercise: true,
+                equipment: true,
+              },
+            },
           },
           orderBy: { order: "asc" },
         },
@@ -158,14 +166,9 @@ export const getSessions = async (
 
     // Calculate stats for each session
     const sessionsWithStats = sessions.map((session) => {
-      const totalVolume = session.exercises.reduce((total, exercise) => {
-        return (
-          total +
-          exercise.sets.reduce((setTotal, set) => {
-            return setTotal + set.weight * set.reps;
-          }, 0)
-        );
-      }, 0);
+      const { totalVolume, bodyweightScore } = computeWorkoutMetrics(
+        session.exercises,
+      );
 
       const duration = session.endTime
         ? (session.endTime.getTime() - session.startTime.getTime()) / 1000 / 60
@@ -175,6 +178,7 @@ export const getSessions = async (
         ...session,
         stats: {
           totalVolume,
+          bodyweightScore,
           duration,
           exerciseCount: session.exercises.length,
           totalSets: session.exercises.reduce(
@@ -430,6 +434,12 @@ export const getCalendarStats = async (
         exercises: {
           include: {
             sets: true,
+            exercise: {
+              select: {
+                isBodyweightExercise: true,
+                equipment: true,
+              },
+            },
           },
         },
       },
@@ -439,26 +449,23 @@ export const getCalendarStats = async (
     const calendarData = sessions.reduce((acc: any, session) => {
       const date = session.startTime.toISOString().split("T")[0];
 
-      const volume = session.exercises.reduce((total, exercise) => {
-        return (
-          total +
-          exercise.sets.reduce((setTotal, set) => {
-            return setTotal + set.weight * set.reps;
-          }, 0)
-        );
-      }, 0);
+      const { totalVolume, bodyweightScore } = computeWorkoutMetrics(
+        session.exercises,
+      );
 
       if (!acc[date]) {
         acc[date] = {
           date,
           workouts: 0,
           totalVolume: 0,
+          bodyweightScore: 0,
           duration: 0,
         };
       }
 
       acc[date].workouts += 1;
-      acc[date].totalVolume += volume;
+      acc[date].totalVolume += totalVolume;
+      acc[date].bodyweightScore += bodyweightScore;
 
       if (session.endTime) {
         const duration =

@@ -15,12 +15,16 @@ export interface Exercise {
   name: string;
   category: string;
   equipment: string;
+  isBodyweightExercise: boolean;
   primaryMuscles: JsonValue;
   secondaryMuscles: JsonValue | null;
   instructions: string | null;
   isCustom: boolean;
   createdBy: string | null;
 }
+
+const isBodyweightEquipment = (equipment: string) =>
+  equipment.toLowerCase().includes("body");
 
 export interface SearchResult {
   data: Exercise[];
@@ -86,6 +90,7 @@ export class ExerciseService {
         name: true,
         category: true,
         equipment: true,
+        isBodyweightExercise: true,
         primaryMuscles: true,
         secondaryMuscles: true,
 
@@ -319,6 +324,9 @@ export class ExerciseService {
         name: data.name,
         category: data.category,
         equipment: data.equipment || "Bodyweight",
+        isBodyweightExercise: isBodyweightEquipment(
+          data.equipment || "Bodyweight",
+        ),
         primaryMuscles: data.primaryMuscles || [],
         secondaryMuscles: data.secondaryMuscles || [],
         instructions: data.instructions || null,
@@ -358,7 +366,12 @@ export class ExerciseService {
 
     return await prisma.globalExercise.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        ...(data.equipment
+          ? { isBodyweightExercise: isBodyweightEquipment(data.equipment) }
+          : {}),
+      },
     });
   }
 

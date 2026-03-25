@@ -89,6 +89,7 @@ model GlobalExercise {
   name             String
   category         String
   equipment        String
+  isBodyweightExercise Boolean @default(false) @map("is_bodyweight_exercise")
   primaryMuscles   Json    @map("primary_muscles") // Stored as JSON array
   secondaryMuscles Json?   @map("secondary_muscles")
   instructions     String? @db.Text

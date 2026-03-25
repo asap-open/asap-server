@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { prisma } from "../utils/prisma.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
+import { computeWorkoutMetrics } from "../utils/workoutMetrics.js";
 
 // Helper to get date range filter
 const getDateFilter = (range: string) => {
@@ -111,6 +112,12 @@ export const getVolumeStats = async (
         exercises: {
           include: {
             sets: true,
+            exercise: {
+              select: {
+                isBodyweightExercise: true,
+                equipment: true,
+              },
+            },
           },
         },
       },
@@ -118,27 +125,29 @@ export const getVolumeStats = async (
     });
 
     // Process data to group by Day
-    const volumeMap = new Map<string, number>();
+    const volumeMap = new Map<
+      string,
+      { volume: number; bodyweightScore: number }
+    >();
 
     sessions.forEach((session) => {
       const dateStr = session.startTime.toISOString().split("T")[0];
-      let sessionVolume = 0;
+      const metrics = computeWorkoutMetrics(session.exercises);
+      const existing = volumeMap.get(dateStr) || {
+        volume: 0,
+        bodyweightScore: 0,
+      };
 
-      session.exercises.forEach((ex) => {
-        ex.sets.forEach((set) => {
-          // Simple volume calculation: weight * reps
-          // Ignore cardio for "volume" chart usually, or treat differently.
-          // If weight is 0 (bodyweight), maybe just count reps? Usually 0 volume in powerlifting context.
-          sessionVolume += set.weight * set.reps;
-        });
+      volumeMap.set(dateStr, {
+        volume: existing.volume + metrics.totalVolume,
+        bodyweightScore: existing.bodyweightScore + metrics.bodyweightScore,
       });
-
-      volumeMap.set(dateStr, (volumeMap.get(dateStr) || 0) + sessionVolume);
     });
 
-    const data = Array.from(volumeMap.entries()).map(([day, volume]) => ({
+    const data = Array.from(volumeMap.entries()).map(([day, values]) => ({
       day,
-      volume,
+      volume: values.volume,
+      bodyweightScore: values.bodyweightScore,
     }));
 
     res.json(data);
