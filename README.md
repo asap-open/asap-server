@@ -74,10 +74,12 @@ yarn install
 Create a `.env` file in the server directory:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/workout_db"
-JWT_SECRET="your-super-secret-jwt-key-change-this"
+DATABASE_URL=postgresql://postgres:12345@localhost:5432/asap
+JWT_SECRET=change_this_to_a_long_random_secret
 PORT=3000
 NODE_ENV=development
+TOKEN_EXP=7d
+FRONTEND_DOMAIN=http://localhost:5173
 ```
 
 3. **Set up database**
@@ -315,7 +317,17 @@ Opens at http://localhost:5555
 
 ```bash
 docker build -t asap-server .
-docker run -p 3000:3000 asap-server
+docker run \
+  --name asap-server \
+  --link asap-db:db \
+  -e DATABASE_URL="postgresql://postgres:postgres@db:5432/asap" \
+  -e JWT_SECRET="change_this_to_a_long_random_secret" \
+  -e TOKEN_EXP="7d" \
+  -e FRONTEND_DOMAIN="http://localhost" \
+  -e NODE_ENV="production" \
+  -e PORT=3000 \
+  -p 3000:3000 \
+  asap-server
 ```
 
 ### Manual Build
@@ -329,12 +341,14 @@ The built files will be in the `dist/` directory.
 
 ## Environment Variables
 
-| Variable       | Description                  | Default       |
-| -------------- | ---------------------------- | ------------- |
-| `DATABASE_URL` | PostgreSQL connection string | Required      |
-| `JWT_SECRET`   | Secret key for JWT signing   | Required      |
-| `PORT`         | Server port                  | `3000`        |
-| `NODE_ENV`     | Environment mode             | `development` |
+| Variable          | Description                                         | Default                        |
+| ----------------- | --------------------------------------------------- | ------------------------------ |
+| `DATABASE_URL`    | PostgreSQL connection string                        | Required                       |
+| `JWT_SECRET`      | Secret key for JWT signing                          | `super-secret-key-change-this` |
+| `PORT`            | Server port                                         | `3000`                         |
+| `NODE_ENV`        | Environment mode used by config/build behavior      | `development`                  |
+| `TOKEN_EXP`       | JWT token expiration                                | `7d`                           |
+| `FRONTEND_DOMAIN` | Allowed CORS origin(s), comma-separated if multiple | Required for browser clients   |
 
 ## Error Handling
 
