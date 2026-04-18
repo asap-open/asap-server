@@ -186,9 +186,9 @@ GlobalExercise
 
 ### Authentication
 
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user (protected)
+- `POST /api/auth/signup` - Register new user
+- `POST /api/auth/signin` - Login user
+- `POST /api/auth/logout` - Logout user
 
 ### Exercises
 
@@ -205,7 +205,7 @@ GlobalExercise
 - `POST /api/sessions` - Create new session (protected)
 - `PUT /api/sessions/:id` - Update session (protected)
 - `DELETE /api/sessions/:id` - Delete session (protected)
-- `GET /api/sessions/recent` - Get recent sessions (protected)
+- `GET /api/sessions/stats/calendar` - Calendar stats (protected)
 
 ### Weights
 
@@ -216,6 +216,35 @@ GlobalExercise
 
 - `GET /api/profile` - Get user profile (protected)
 - `PUT /api/profile` - Update profile (protected)
+- `PUT /api/profile/username` - Update username (protected)
+
+### Progress (V2)
+
+- `GET /api/progress/summary` - Overview KPIs
+- `GET /api/progress/calendar` - Calendar heatmap data
+- `GET /api/progress/timeseries` - Workload time series
+- `GET /api/progress/muscle-balance` - Muscle distribution/balance
+- `GET /api/progress/pbs/timeline` - Personal best timeline
+- `GET /api/progress/strength/1rm` - Strength trend data
+- `GET /api/progress/workload` - ACWR/ramp analysis
+- `GET /api/progress/day-detail` - Selected day drilldown
+
+### Routines
+
+- `GET /api/routines` - List routines
+- `GET /api/routines/:id` - Get routine details
+- `POST /api/routines` - Create routine
+- `PUT /api/routines/:id` - Update routine
+- `DELETE /api/routines/:id` - Delete routine
+
+### Personal Bests
+
+- `GET /api/pbs` - List PB records
+- `GET /api/pbs/:exerciseId` - PBs for an exercise
+- `POST /api/pbs/sync` - Full PB sync
+- `POST /api/pbs/check-session/:sessionId` - Check one session for new PBs
+- `DELETE /api/pbs/:exerciseId` - Delete all PBs for exercise
+- `DELETE /api/pbs/:exerciseId/:metric` - Delete one PB metric
 
 See [API Documentation](../docs/api/) for detailed endpoint specifications.
 
@@ -232,7 +261,7 @@ The API uses JWT (JSON Web Tokens) for authentication.
 
 ### Protected Routes
 
-All routes except `/api/auth/register` and `/api/auth/login` require authentication.
+All routes except authentication (`/api/auth/signup`, `/api/auth/signin`, `/api/auth/logout`) require authentication.
 
 Include the token in the Authorization header:
 
@@ -290,7 +319,7 @@ The seed script (`src/utils/seed.ts`) populates the database with:
 Run seeding:
 
 ```bash
-yarn seed
+npx prisma db seed
 ```
 
 ### Custom Seeding
@@ -306,7 +335,7 @@ Edit `src/utils/seed.ts` to add:
 Visual database browser for development:
 
 ```bash
-yarn prisma studio
+npx prisma studio
 ```
 
 Opens at http://localhost:5555
