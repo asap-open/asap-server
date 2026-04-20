@@ -1,5 +1,5 @@
 # --- Stage 1: Base & Dependencies ---
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app    
 RUN apk add --no-cache openssl-dev python3 make g++
 
@@ -9,7 +9,7 @@ COPY prisma ./prisma
 RUN yarn install --frozen-lockfile
 
 # --- Stage 2: Builder ---
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache openssl-dev
 
@@ -21,23 +21,14 @@ RUN npx prisma generate
 # Build the TS code. Since rootDir is ./src, output will be directly in ./dist
 RUN yarn build
 
-# --- Stage 3: Production Dependencies ---
-FROM node:20-alpine AS prod-deps
-WORKDIR /app
-RUN apk add --no-cache openssl-dev
-
-COPY package.json yarn.lock ./
-COPY prisma ./prisma 
-RUN yarn install --frozen-lockfile --production --ignore-optional
-
-# --- Stage 4: Runtime Image ---
-FROM node:20-alpine AS runner
+# --- Stage 3: Runtime Image ---
+FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
 RUN apk add --no-cache libssl3 libstdc++
 
-COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist/src ./dist
 COPY --from=builder /app/dist/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
