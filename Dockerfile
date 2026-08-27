@@ -1,5 +1,5 @@
 # --- Stage 1: Base & Dependencies ---
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 RUN npm install -g npm@latest
 WORKDIR /app    
 RUN apk add --no-cache openssl-dev python3 make g++
@@ -10,7 +10,7 @@ COPY prisma ./prisma
 RUN yarn install --frozen-lockfile
 
 # --- Stage 2: Builder ---
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 RUN npm install -g npm@latest
 WORKDIR /app
 RUN apk add --no-cache openssl-dev
@@ -24,7 +24,7 @@ RUN npx prisma generate
 RUN yarn build
 
 # --- Stage 3: Runtime Image ---
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 RUN npm install -g npm@latest
 WORKDIR /app
 ENV NODE_ENV=production
