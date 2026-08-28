@@ -218,16 +218,9 @@ GlobalExercise
 - `PUT /api/profile` - Update profile (protected)
 - `PUT /api/profile/username` - Update username (protected)
 
-### Progress (V2)
+### Progress
 
-- `GET /api/progress/summary` - Overview KPIs
-- `GET /api/progress/calendar` - Calendar heatmap data
-- `GET /api/progress/timeseries` - Workload time series
-- `GET /api/progress/muscle-balance` - Muscle distribution/balance
-- `GET /api/progress/pbs/timeline` - Personal best timeline
-- `GET /api/progress/strength/1rm` - Strength trend data
-- `GET /api/progress/workload` - ACWR/ramp analysis
-- `GET /api/progress/day-detail` - Selected day drilldown
+- `GET /api/progress/overview` - Complete progress metrics (KPIs, GitHub heatmap, volume & weight time-series)
 
 ### Routines
 
@@ -310,25 +303,20 @@ npx prisma migrate reset
 
 ## Seeding
 
-The seed script (`src/utils/seed.ts`) populates the database with:
+The seed script (`prisma/seed.ts`) populates the database using Faker:
 
-- Sample exercises from `data/exercises.json`
-- Exercise categories and muscle groups
-- Equipment types
+- **Users:** Creates `dev` (`dev@asap.local`) and `devadmin` (`devadmin@asap.local`) with password `password123`.
+- **Exercises:** Ensures foundational exercise library exists.
+- **Workouts:** ~110 realistic workout sessions across the last 365 days (Push, Pull, Legs, Full Body) with progressive overload.
+- **Weight Logs:** ~50 body weight logs over the year.
 
-Run seeding:
+Run seeding manually:
 
 ```bash
-npx prisma db seed
+yarn seed
 ```
 
-### Custom Seeding
-
-Edit `src/utils/seed.ts` to add:
-
-- Sample users
-- Sample workouts
-- Additional exercises
+> **Note:** Seeding is **never** run automatically when the server connects or starts up. It only runs when you explicitly execute `yarn seed`.
 
 ## Prisma Studio
 
