@@ -9,6 +9,8 @@ import progressRoutes from "./routes/progress.route.js";
 import routineRoutes from "./routes/routine.route.js";
 import pbRoutes from "./routes/pb.route.js";
 import { prisma } from "./utils/prisma.js";
+import { metricsMiddleware } from "./middleware/metrics.middleware.js";
+import metricsRoutes from "./routes/metrics.route.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -21,9 +23,6 @@ const configuredOrigins = (process.env.FRONTEND_DOMAIN || "")
 
 const ALLOWED_ORIGINS = new Set([
   ...configuredOrigins,
-  "capacitor://localhost", // Android (Capacitor, legacy)
-  "http://localhost", // Android WebView (androidScheme: http)
-  "https://localhost", // Android WebView (androidScheme: https)
 ]);
 
 // Logging middleware
@@ -46,6 +45,11 @@ app.use((req, res, next) => {
 // CORS middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    logger.cors(origin, false);
+    return res.status(403).json({ error: "CORS origin forbidden" });
+  }
   const allowed = origin ? ALLOWED_ORIGINS.has(origin) : false;
   logger.cors(origin ?? "none", allowed);
   if (allowed) {
@@ -66,6 +70,10 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+app.use(metricsMiddleware);
+
+app.use("/metrics", metricsRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/exercises", exerciseRoutes);
