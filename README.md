@@ -220,7 +220,9 @@ GlobalExercise
 
 ### Progress
 
-- `GET /api/progress/overview` - Complete progress metrics (KPIs, GitHub heatmap, volume & weight time-series)
+- `GET /api/progress/heatmap` - Workout activity heatmap by year / trailing 365 days
+- `GET /api/progress/metrics` - KPI card metrics (consistency, active days, streak, volume)
+- `GET /api/progress/volume` - Volume progression or weight tracking time-series
 
 ### Routines
 
