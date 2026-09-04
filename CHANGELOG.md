@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/asap-open/asap-server/compare/v1.5.0...v1.5.1) (2026-09-04)
+
+
+### Bug Fixes
+
+* refactor generic api into specific api for progress ([4810ac3](https://github.com/asap-open/asap-server/commit/4810ac33ac6ac6ef65573375a1831ed5459f9b1f))
+
 ## [1.5.0](https://github.com/asap-open/asap-server/compare/v1.4.3...v1.5.0) (2026-08-28)
 
 
